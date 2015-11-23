@@ -1,0 +1,2 @@
+# TS_FtpGet
+TeratermStationにftp取得機能を追加するプラグインです。
