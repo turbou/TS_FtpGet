@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="Shift_JIS"?>
+<project name="TS_FtpGet" default="jar" basedir="." >
+    <target name="jar">
+        <jar basedir="bin" jarfile="ftpget-1.0.0.jar">
+            <manifest>
+                 <attribute name="Plugin-Class" value="jp.co.tabocom.tsplugin.ftpget.FtpGetPlugin"/>
+             </manifest>
+      	</jar>
+    </target>
+</project>
