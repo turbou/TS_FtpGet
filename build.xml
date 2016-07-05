@@ -5,6 +5,7 @@
             <manifest>
                  <attribute name="Plugin-Class" value="jp.co.tabocom.tsplugin.ftpget.FtpGetPlugin"/>
              </manifest>
+			<zipgroupfileset dir="lib" includes="**/*.jar" />
       	</jar>
     </target>
 </project>

@@ -1,2 +1,5 @@
 eclipse.preferences.version=1
+encoding//src/jp/co/tabocom/tsplugin/ftpget/FtpGetBulkAction.java=UTF-8
 encoding//src/jp/co/tabocom/tsplugin/ftpget/FtpGetPlugin.java=UTF-8
+encoding//src/jp/co/tabocom/tsplugin/ftpget/preference/FtpGetPreferencePage.java=UTF-8
+encoding//src/jp/co/tabocom/tsplugin/ftpget/preference/PreferenceConstants.java=UTF-8
