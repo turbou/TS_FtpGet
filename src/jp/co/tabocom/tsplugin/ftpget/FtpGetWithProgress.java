@@ -45,13 +45,20 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
     }
 
     @Override
-    public void run(IProgressMonitor arg0) throws InvocationTargetException, InterruptedException {
-        int interval = 200;
+    public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
         try {
             SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
             String timestamp = fmt.format(Calendar.getInstance().getTime());
             // チェックされているノードすべてで実行します。もちろん親ノード（サーバ種別を表すノード）は対象外です。
+            monitor.beginTask("FTP一括取得中...", nodes.length);
             for (TargetNode target : nodes) {
+                String svrType = target.getParent().getName();
+                if (svrType == null) {
+                    svrType = target.getCategory().getName();
+                }
+                String targetSvr = target.getName();
+                monitor.subTask(svrType + " " + targetSvr);
+                monitor.worked(1);
                 FtpGet ftpGet = new FtpGet();
                 if (ftpInfo.isAuth()) {
                     // getConnectの中のIPアドレスを取り出す。
@@ -92,7 +99,9 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
 
                 makeFtpDirectory(saveDirPath.toString());
                 ftpGet(ftpGet);
+                Thread.sleep(200);
             }
+            monitor.done();
         } catch (Exception e) {
             e.printStackTrace();
         }

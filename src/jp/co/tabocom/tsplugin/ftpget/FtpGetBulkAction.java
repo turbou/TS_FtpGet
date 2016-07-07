@@ -28,7 +28,7 @@ public class FtpGetBulkAction extends TeratermStationAction {
         if (IDialogConstants.OK_ID != result) {
             return;
         }
-        ProgressMonitorDialog progDialog = new ProgressMonitorDialog(shell);
+        // FTP一括取得のためのもろもろの情報をセット
         Main main = (Main) shell.getData("main");
         IPreferenceStore ps = main.getPreferenceStore();
         EnvTabItem tabItem = main.getCurrentTabItem();
@@ -43,13 +43,15 @@ public class FtpGetBulkAction extends TeratermStationAction {
         ftpInfo.setAddHostname(dialog.isAddHostname());
         ftpInfo.setAuthId(tabItem.getAuthId());
         ftpInfo.setAuthPwd(tabItem.getAuthPwd());
+
         FtpGetWithProgress progress = new FtpGetWithProgress(shell, nodes, ftpInfo);
+        ProgressMonitorDialog progDialog = new ProgressMonitorDialog(shell);
         try {
             progDialog.run(true, true, progress);
         } catch (InvocationTargetException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
-            System.err.println("キャンセルされました");
+            System.err.println("キャンセルされました。");
             e.printStackTrace();
         }
     }
