@@ -1,22 +1,29 @@
 package jp.co.tabocom.tsplugin.ftpget;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
-import java.util.List;
+import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.swing.SwingWorker;
+import jp.co.tabocom.teratermstation.model.TargetNode;
 
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.Shell;
 
-public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
+public class FtpGetWithProgress implements IRunnableWithProgress {
 
     public static final String PROXY_PORT = "21";
-
-    FTPClient client;
-
     // TIMEOUT定義
     private static final int CONNECT_TIMEOUT = 30000;
     private static final int LOGIN_TIMEOUT = 30000;
@@ -27,19 +34,87 @@ public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
     private static final String ATMARK = "@";
     private static final String ERROR_FILE = "ftp_error.log";
 
-    private FtpGet ftpGet;
+    private Shell shell;
+    private TargetNode[] nodes;
+    private FtpInfo ftpInfo;
 
-    public FtpFileGetWorker(FtpGet ftpGet) {
-        this.ftpGet = ftpGet;
+    public FtpGetWithProgress(Shell shell, TargetNode[] nodes, FtpInfo ftpInfo) {
+        this.shell = shell;
+        this.nodes = nodes;
+        this.ftpInfo = ftpInfo;
     }
 
     @Override
-    protected Boolean doInBackground() throws Exception {
+    public void run(IProgressMonitor arg0) throws InvocationTargetException, InterruptedException {
+        int interval = 200;
+        try {
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
+            String timestamp = fmt.format(Calendar.getInstance().getTime());
+            // チェックされているノードすべてで実行します。もちろん親ノード（サーバ種別を表すノード）は対象外です。
+            for (TargetNode target : nodes) {
+                FtpGet ftpGet = new FtpGet();
+                if (ftpInfo.isAuth()) {
+                    // getConnectの中のIPアドレスを取り出す。
+                    Pattern p = Pattern.compile("^connect '(\\S+) .+$", Pattern.MULTILINE);
+                    Matcher m = p.matcher(ftpInfo.getConnect());
+                    if (m.find()) {
+                        ftpGet.setAuthAddress(m.group(1));
+                    } else {
+                        MessageDialog.openError(shell, "一括取得", "ゲートウェイの接続先が取得できませんでした。");
+                        return;
+                    }
+                }
+                // あとは共通部分の設定
+                ftpGet.setAuthUsr(ftpInfo.getAuthId());
+                ftpGet.setAuthPwd(ftpInfo.getAuthPwd());
+                ftpGet.setTargetAddress(target.getIpAddr());
+                ftpGet.setLoginUsr(target.getLoginUsr());
+                ftpGet.setLoginPwd(target.getLoginPwd());
+                ftpGet.setHostName(target.getHostName());
+                ftpGet.setTargetFileListStr(ftpInfo.getTargetPath());
+                ftpGet.setAddHostname(ftpInfo.isAddHostname());
+                StringBuilder saveDirPath = new StringBuilder(ftpInfo.getFtpGetDir());
+                saveDirPath.append("\\");
+                saveDirPath.append(timestamp);
+                if (ftpInfo.isDivide()) {
+                    saveDirPath.append("\\");
+                    saveDirPath.append(target.getParent().getName());
+                    saveDirPath.append("\\");
+                    saveDirPath.append(target.getName());
+                }
+                ftpGet.setLocalSaveDir(saveDirPath.toString());
 
+                // とりあえず各設定項目の内容チェック
+                if (ftpGet.isError()) {
+                    MessageDialog.openError(shell, "一括取得", "基本設定に不備があるため、処理を続行できません。");
+                    return;
+                }
+
+                makeFtpDirectory(saveDirPath.toString());
+                ftpGet(ftpGet);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private boolean makeFtpDirectory(String path) {
+        File dir = new File(path);
+        if (dir.exists()) {
+            return true;
+        }
+        if (!dir.mkdirs()) {
+            MessageDialog.openError(shell, "エラー", "FTP保存ディレクトリを作成できませんでした。");
+            return false;
+        }
+        return true;
+    }
+
+    private void ftpGet(FtpGet ftpGet) {
         FileOutputStream ostream = null;
 
         // FTPClientの生成
-        client = new FTPClient();
+        FTPClient client = new FTPClient();
 
         try {
             // サーバに接続
@@ -72,8 +147,8 @@ public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
 
             // ファイル受信
             for (String filePath : ftpGet.getTargetFileList()) {
-                String correctPath = getCorrectPath(filePath);
-                String fileName = getCorrectFileName(correctPath);
+                String correctPath = getCorrectPath(filePath, ftpGet);
+                String fileName = getCorrectFileName(correctPath, ftpGet);
                 ostream = new FileOutputStream(ftpGet.getLocalSaveDir() + WIN_SEP + fileName);
                 client.retrieveFile(correctPath, ostream);
                 ostream.close();
@@ -84,12 +159,20 @@ public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
             }
         } catch (Exception e) {
             if (ostream == null) {
-                ostream = new FileOutputStream(ftpGet.getLocalSaveDir() + WIN_SEP + ERROR_FILE);
+                try {
+                    ostream = new FileOutputStream(ftpGet.getLocalSaveDir() + WIN_SEP + ERROR_FILE);
+                } catch (FileNotFoundException e1) {
+                    e1.printStackTrace();
+                }
             }
             e.printStackTrace(new PrintStream(ostream));
         } finally {
             if (client.isConnected()) {
-                client.disconnect();
+                try {
+                    client.disconnect();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             if (ostream != null) {
                 try {
@@ -99,10 +182,9 @@ public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
                 }
             }
         }
-        return Boolean.TRUE;
     }
 
-    private String getCorrectPath(String path) {
+    private String getCorrectPath(String path, FtpGet ftpGet) {
         if (!path.contains("$")) {
             return path;
         }
@@ -125,7 +207,7 @@ public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
         return repStr;
     }
 
-    private String getCorrectFileName(String correctPath) {
+    private String getCorrectFileName(String correctPath, FtpGet ftpGet) {
         String fileName = correctPath.substring(correctPath.lastIndexOf("/"), correctPath.length());
         if (ftpGet.isAddHostname()) {
             if (fileName.contains(".")) {
@@ -137,12 +219,4 @@ public class FtpFileGetWorker extends SwingWorker<Boolean, String> {
         }
         return fileName;
     }
-
-    @Override
-    protected void process(List<String> chunks) {
-        for (String str : chunks) {
-            firePropertyChange("console", null, str);
-        }
-    }
-
 }

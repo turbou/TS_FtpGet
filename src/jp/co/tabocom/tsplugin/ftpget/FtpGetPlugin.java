@@ -8,6 +8,7 @@ import jp.co.tabocom.teratermstation.model.TargetNode;
 import jp.co.tabocom.teratermstation.plugin.TeratermStationPlugin;
 import jp.co.tabocom.teratermstation.ui.action.TeratermStationAction;
 import jp.co.tabocom.teratermstation.ui.action.TeratermStationContextMenu;
+import jp.co.tabocom.tsplugin.ftpget.preference.FtpGetPreferencePage;
 
 import org.eclipse.jface.preference.PreferencePage;
 import org.eclipse.jface.preference.PreferenceStore;
@@ -17,7 +18,7 @@ public class FtpGetPlugin implements TeratermStationPlugin {
 
     @Override
     public PreferencePage getPreferencePage() {
-        return null;
+        return new FtpGetPreferencePage();
     }
 
     @Override
