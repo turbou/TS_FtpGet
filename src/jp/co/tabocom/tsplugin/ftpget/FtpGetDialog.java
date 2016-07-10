@@ -54,7 +54,9 @@ public class FtpGetDialog extends Dialog {
         GridData descLblGrDt = new GridData(GridData.FILL_HORIZONTAL);
         descLblGrDt.verticalSpan = 2;
         descLabel.setLayoutData(descLblGrDt);
-        descLabel.setText("- 使用可能な環境変数は$HOSTNAME, $APL_DIR, $APL_PKG01_DIR, $WEBADMです。" + "\n- ホーム直下のファイルを取得する場合は./(ドットスラ)を付けて相対パスで指定してください。"
+        descLabel.setText("- 変数も使用できます（TeratermStationの接続定義のvariableで設定しておく必要があります）"
+                + "\n  HOSTNAMEは接続定義のhostnameの値が使用されます。"
+                + "\n- ホーム直下のファイルを取得する場合は./(ドットスラ)を付けて相対パスで指定してください。"
                 + "\n- ファイル名にホスト名が含まれる場合は右のチェックを外すことで１つのフォルダに取得することができます。");
         // ========== サーバごとフォルダを分けるかチェックボックス ==========
         this.serverDivideCheck = new Button(composite, SWT.CHECK);

@@ -12,6 +12,7 @@ import jp.co.tabocom.tsplugin.ftpget.preference.PreferenceConstants;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 
@@ -58,7 +59,8 @@ public class FtpGetBulkAction extends TeratermStationAction {
 
     @Override
     public ToolTip getToolTip() {
-        return null;
+        ToolTip toolTip = new ToolTip(shell, SWT.BALLOON);
+        toolTip.setMessage("複数のサーバから一括でファイルをFtpゲットすることができます。");
+        return toolTip;
     }
-
 }

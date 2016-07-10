@@ -8,11 +8,14 @@ import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jp.co.tabocom.teratermstation.model.TargetNode;
 
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
@@ -74,10 +77,7 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
                 // あとは共通部分の設定
                 ftpGet.setAuthUsr(ftpInfo.getAuthId());
                 ftpGet.setAuthPwd(ftpInfo.getAuthPwd());
-                ftpGet.setTargetAddress(target.getIpAddr());
-                ftpGet.setLoginUsr(target.getLoginUsr());
-                ftpGet.setLoginPwd(target.getLoginPwd());
-                ftpGet.setHostName(target.getHostName());
+                ftpGet.setNode(target);
                 ftpGet.setTargetFileListStr(ftpInfo.getTargetPath());
                 ftpGet.setAddHostname(ftpInfo.isAddHostname());
                 StringBuilder saveDirPath = new StringBuilder(ftpInfo.getFtpGetDir());
@@ -85,7 +85,11 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
                 saveDirPath.append(timestamp);
                 if (ftpInfo.isDivide()) {
                     saveDirPath.append("\\");
-                    saveDirPath.append(target.getParent().getName());
+                    String parent = target.getParent().getName();
+                    if (parent == null) {
+                        parent = target.getCategory().getName();
+                    }
+                    saveDirPath.append(parent);
                     saveDirPath.append("\\");
                     saveDirPath.append(target.getName());
                 }
@@ -140,8 +144,8 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
                 throw new Exception("認証エラー：" + ftpGet.getAuthUsr() + "/" + ftpGet.getAuthPwd());
             }
 
-            if (!client.login(ftpGet.getLoginUsr() + ATMARK + ftpGet.getTargetAddress(), ftpGet.getLoginPwd())) {
-                throw new Exception("サーバログインエラー：" + ftpGet.getLoginUsr() + ATMARK + ftpGet.getTargetAddress() + "/" + ftpGet.getLoginPwd());
+            if (!client.login(ftpGet.getNode().getLoginUsr() + ATMARK + ftpGet.getNode().getIpAddr(), ftpGet.getNode().getLoginPwd())) {
+                throw new Exception("サーバログインエラー：" + ftpGet.getNode().getLoginUsr() + ATMARK + ftpGet.getNode().getIpAddr() + "/" + ftpGet.getNode().getLoginPwd());
             }
 
             // Passiveはとりあえずコメント.本番でも開発でも問題がないようなので.
@@ -194,25 +198,17 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
     }
 
     private String getCorrectPath(String path, FtpGet ftpGet) {
-        if (!path.contains("$")) {
-            return path;
-        }
         String repStr = new String(path);
-        String user = ftpGet.getLoginUsr(); // ログインユーザーを取得(例：aplusr01)
-        String men = user.substring(user.length() - 2); // ユーザー名から面情報を取得(例：01)
-        // まずは先頭に指定されるであろう環境変数のリプレイス
-        if (repStr.startsWith("$APL_DIR")) {
-            repStr = repStr.replaceAll(Pattern.quote("$APL_DIR"), String.format("/APL/group%s/local", men));
-        } else if (repStr.startsWith("$APL_PKG01_DIR")) {
-            repStr = repStr.replaceAll(Pattern.quote("$APL_PKG01_DIR"), String.format("/APL/group%s/pkg01", men));
-        } else if (repStr.startsWith("$WEBADM")) {
-            repStr = repStr.replaceAll(Pattern.quote("$WEBADM"), String.format("/webadm%s", men));
+        // まずは変数のリプレイス
+        Map<String, String> valueMap = new HashMap<String, String>();
+        // HOSTNAMEをセットしておく
+        valueMap.put("HOSTNAME", ftpGet.getNode().getHostName());
+        // あとは変数マップから
+        if (ftpGet.getNode().getVariable() != null) {
+            valueMap.putAll(ftpGet.getNode().getVariable());
         }
-
-        // 次にパスの中のどこかで指定されるであろう環境変数のリプレイス
-        if (repStr.contains("$HOSTNAME")) {
-            repStr = repStr.replaceAll(Pattern.quote("$HOSTNAME"), ftpGet.getHostName());
-        }
+        StrSubstitutor sub = new StrSubstitutor(valueMap);
+        repStr = sub.replace(repStr);
         return repStr;
     }
 
@@ -221,9 +217,9 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
         if (ftpGet.isAddHostname()) {
             if (fileName.contains(".")) {
                 String suffix = fileName.substring(fileName.lastIndexOf("."), fileName.length());
-                fileName = fileName.replaceAll(suffix, "_" + ftpGet.getHostName() + suffix);
+                fileName = fileName.replaceAll(suffix, "_" + ftpGet.getNode().getHostName() + suffix);
             } else {
-                fileName = fileName + "_" + ftpGet.getHostName();
+                fileName = fileName + "_" + ftpGet.getNode().getHostName();
             }
         }
         return fileName;

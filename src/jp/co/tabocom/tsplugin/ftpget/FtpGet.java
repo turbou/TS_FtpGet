@@ -3,19 +3,18 @@ package jp.co.tabocom.tsplugin.ftpget;
 import java.util.Arrays;
 import java.util.List;
 
+import jp.co.tabocom.teratermstation.model.TargetNode;
+
 public class FtpGet {
 
     private String authAddress;
-    private String targetAddress;
     private String authUsr;
     private String authPwd;
-    private String loginUsr;
-    private String loginPwd;
-    private String hostName;
     private String targetFileListStr;
     private List<String> targetFileList;
     private String localSaveDir;
     private boolean isAddHostname;
+    private TargetNode node;
 
     public String getAuthAddress() {
         return authAddress;
@@ -23,14 +22,6 @@ public class FtpGet {
 
     public void setAuthAddress(String authAddress) {
         this.authAddress = authAddress;
-    }
-
-    public String getTargetAddress() {
-        return targetAddress;
-    }
-
-    public void setTargetAddress(String targetAddress) {
-        this.targetAddress = targetAddress;
     }
 
     public String getAuthUsr() {
@@ -47,30 +38,6 @@ public class FtpGet {
 
     public void setAuthPwd(String authPwd) {
         this.authPwd = authPwd;
-    }
-
-    public String getLoginUsr() {
-        return loginUsr;
-    }
-
-    public void setLoginUsr(String loginUsr) {
-        this.loginUsr = loginUsr;
-    }
-
-    public String getLoginPwd() {
-        return loginPwd;
-    }
-
-    public void setLoginPwd(String loginPwd) {
-        this.loginPwd = loginPwd;
-    }
-
-    public String getHostName() {
-        return hostName;
-    }
-
-    public void setHostName(String hostName) {
-        this.hostName = hostName;
     }
 
     public void setTargetFileListStr(String targetFileListStr) {
@@ -98,19 +65,27 @@ public class FtpGet {
         this.isAddHostname = isAddHostname;
     }
 
+    public TargetNode getNode() {
+        return node;
+    }
+
+    public void setNode(TargetNode node) {
+        this.node = node;
+    }
+
     public boolean isError() {
         boolean flg = false;
         if (authAddress.isEmpty())
             flg |= true;
-        if (targetAddress.isEmpty())
+        if (node.getIpAddr().isEmpty())
             flg |= true;
         if (authUsr.isEmpty())
             flg |= true;
         if (authPwd.isEmpty())
             flg |= true;
-        if (loginUsr.isEmpty())
+        if (node.getLoginUsr().isEmpty())
             flg |= true;
-        if (loginPwd.isEmpty())
+        if (node.getLoginPwd().isEmpty())
             flg |= true;
         return flg;
     }
