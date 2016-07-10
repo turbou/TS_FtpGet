@@ -55,10 +55,7 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
             // チェックされているノードすべてで実行します。もちろん親ノード（サーバ種別を表すノード）は対象外です。
             monitor.beginTask("FTP一括取得中...", nodes.length);
             for (TargetNode target : nodes) {
-                String svrType = target.getParent().getName();
-                if (svrType == null) {
-                    svrType = target.getCategory().getName();
-                }
+                String svrType = target.getParentName();
                 String targetSvr = target.getName();
                 monitor.subTask(svrType + " " + targetSvr);
                 monitor.worked(1);
@@ -85,11 +82,7 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
                 saveDirPath.append(timestamp);
                 if (ftpInfo.isDivide()) {
                     saveDirPath.append("\\");
-                    String parent = target.getParent().getName();
-                    if (parent == null) {
-                        parent = target.getCategory().getName();
-                    }
-                    saveDirPath.append(parent);
+                    saveDirPath.append(target.getParentName());
                     saveDirPath.append("\\");
                     saveDirPath.append(target.getName());
                 }
