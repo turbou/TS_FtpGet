@@ -3,6 +3,7 @@ package jp.co.tabocom.tsplugin.ftpget;
 import java.lang.reflect.InvocationTargetException;
 
 import jp.co.tabocom.teratermstation.Main;
+import jp.co.tabocom.teratermstation.TeratermStationShell;
 import jp.co.tabocom.teratermstation.model.Tab;
 import jp.co.tabocom.teratermstation.model.TargetNode;
 import jp.co.tabocom.teratermstation.ui.EnvTabItem;
@@ -13,12 +14,11 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.ToolTip;
 
 public class FtpGetBulkAction extends TeratermStationAction {
 
-    public FtpGetBulkAction(TargetNode[] nodes, Object value, Shell shell) {
+    public FtpGetBulkAction(TargetNode[] nodes, Object value, TeratermStationShell shell) {
         super("FTP一括取得...", null, nodes, value, shell);
     }
 
