@@ -30,7 +30,7 @@ public class FtpGetBulkAction extends TeratermStationAction {
             return;
         }
         // FTP一括取得のためのもろもろの情報をセット
-        Main main = (Main) shell.getData("main");
+        Main main = shell.getMain();
         IPreferenceStore ps = main.getPreferenceStore();
         EnvTabItem tabItem = main.getCurrentTabItem();
         Tab tab = tabItem.getTab();
