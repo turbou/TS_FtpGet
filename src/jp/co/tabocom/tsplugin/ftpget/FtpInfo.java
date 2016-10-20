@@ -1,5 +1,8 @@
 package jp.co.tabocom.tsplugin.ftpget;
 
+import java.io.File;
+import java.io.IOException;
+
 public class FtpInfo {
     private String ftpGetDir;
     private boolean isAuth;
@@ -18,6 +21,14 @@ public class FtpInfo {
 
     public void setFtpGetDir(String ftpGetDir) {
         this.ftpGetDir = ftpGetDir;
+        File ftpGetDirFile = new File(this.ftpGetDir);
+        if (!ftpGetDirFile.isAbsolute()) {
+            try {
+                this.ftpGetDir = ftpGetDirFile.getCanonicalPath();
+            } catch (IOException e) {
+                this.ftpGetDir = null;
+            }
+        }
     }
 
     public boolean isAuth() {
@@ -74,6 +85,15 @@ public class FtpInfo {
 
     public void setAuthPwd(String authPwd) {
         this.authPwd = authPwd;
+    }
+
+    public boolean hasError() {
+        boolean flg = false;
+        if (this.ftpGetDir == null || this.ftpGetDir.isEmpty()) {
+            flg |= true;
+        }
+
+        return flg;
     }
 
 }

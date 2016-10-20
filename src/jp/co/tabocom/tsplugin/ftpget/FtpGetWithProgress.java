@@ -50,6 +50,11 @@ public class FtpGetWithProgress implements IRunnableWithProgress {
     @Override
     public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
         try {
+            if (this.ftpInfo.hasError()) {
+                MessageDialog.openError(shell, "一括取得", "基本設定に不備があるため、処理を続行できません。");
+                return;
+            }
+            
             SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
             String timestamp = fmt.format(Calendar.getInstance().getTime());
             // チェックされているノードすべてで実行します。もちろん親ノード（サーバ種別を表すノード）は対象外です。
